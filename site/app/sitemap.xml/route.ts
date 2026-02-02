@@ -2,17 +2,23 @@ export async function GET() {
   const baseUrl = "https://dcinfinitysolar.com.br";
 
   const pages = [
-    "",
-    "#empresa",
-    "#solucoes",
-    "#projetos",
-    "#servicos",
-    "#suporte",
-  ];
+  "",
+  "/energia-solar-on-grid",
+  "/energia-solar-off-grid",
+  "/bombeamento-solar",
+  "#empresa",
+  "#solucoes",
+  "#projetos",
+  "#servicos",
+  "#suporte",
+];
 
   const urls = pages
     .map((p) => {
-      const loc = p.startsWith("#") ? `${baseUrl}/${p}` : `${baseUrl}/${p}`;
+      const loc = p.startsWith("#")
+  ? `${baseUrl}/${p}`
+  : `${baseUrl}${p.startsWith("/") ? "" : "/"}${p}`;
+
       return `
   <url>
     <loc>${loc}</loc>

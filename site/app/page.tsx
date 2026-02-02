@@ -103,7 +103,38 @@ const projetosFiltrados =
          {/* Menu */}
          <nav className="hidden md:flex items-center gap-5 text-sm text-white/70">
            <a className="hover:text-white" href="#empresa">Empresa</a>
-           <a className="hover:text-white" href="#solucoes">Soluções</a>
+           <div className="relative group">
+  <a className="hover:text-white" href="#solucoes">
+    Soluções
+  </a>
+
+  <div className="invisible absolute left-0 top-full z-50 mt-3 w-72 rounded-2xl border border-white/10 bg-black/95 p-2 opacity-0 shadow-lg backdrop-blur transition-all group-hover:visible group-hover:opacity-100">
+    <a
+      className="block rounded-xl px-4 py-3 text-white/85 hover:bg-white/10 hover:text-white"
+      href="/energia-solar-on-grid"
+    >
+      <div className="font-semibold">Energia Solar On-Grid</div>
+      <div className="text-sm text-white/70">Conectado à rede, economia na conta.</div>
+    </a>
+
+    <a
+      className="block rounded-xl px-4 py-3 text-white/85 hover:bg-white/10 hover:text-white"
+      href="/energia-solar-off-grid"
+    >
+      <div className="font-semibold">Energia Solar Off-Grid</div>
+      <div className="text-sm text-white/70">Com baterias, autonomia total.</div>
+    </a>
+
+    <a
+      className="block rounded-xl px-4 py-3 text-white/85 hover:bg-white/10 hover:text-white"
+      href="/bombeamento-solar"
+    >
+      <div className="font-semibold">Bombeamento Solar</div>
+      <div className="text-sm text-white/70">Poço, irrigação e água na zona rural.</div>
+    </a>
+  </div>
+</div>
+
            <a className="hover:text-white" href="#projetos">Projetos</a>
            <a className="hover:text-white" href="#servicos">Serviços</a>
            <a className="hover:text-white" href="#suporte">Suporte</a>
@@ -225,6 +256,44 @@ const projetosFiltrados =
            </div>
           </section>
       {/* SOLUÇÕES */}
+      <div className="mt-10 grid gap-4 md:grid-cols-3">
+  <a
+    href="/energia-solar-on-grid"
+    className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:bg-white/10"
+  >
+    <p className="text-sm text-white/70">Solução</p>
+    <h3 className="mt-1 text-xl font-semibold">Energia Solar On-Grid</h3>
+    <p className="mt-2 text-white/80">
+      Sistema conectado à rede para reduzir sua conta de luz com ótimo custo-benefício.
+    </p>
+    <p className="mt-4 font-semibold text-yellow-300">Ver detalhes →</p>
+  </a>
+
+  <a
+    href="/energia-solar-off-grid"
+    className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:bg-white/10"
+  >
+    <p className="text-sm text-white/70">Solução</p>
+    <h3 className="mt-1 text-xl font-semibold">Energia Solar Off-Grid</h3>
+    <p className="mt-2 text-white/80">
+      Sistema com baterias para autonomia em áreas rurais, sítios e locais sem rede.
+    </p>
+    <p className="mt-4 font-semibold text-yellow-300">Ver detalhes →</p>
+  </a>
+
+  <a
+    href="/bombeamento-solar"
+    className="rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:bg-white/10"
+  >
+    <p className="text-sm text-white/70">Solução</p>
+    <h3 className="mt-1 text-xl font-semibold">Bombeamento Solar</h3>
+    <p className="mt-2 text-white/80">
+      Bombeamento de água para poço, irrigação, reservatórios e abastecimento rural.
+    </p>
+    <p className="mt-4 font-semibold text-yellow-300">Ver detalhes →</p>
+  </a>
+</div>
+
       <section id="solucoes" className="mx-auto max-w-6xl px-6 py-16">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl font-semibold">Projetos de Energia Solar</h2>
