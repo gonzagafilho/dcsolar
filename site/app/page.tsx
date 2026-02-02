@@ -1,14 +1,46 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+
+type ProjetoSelecionado = {
+  src: string;
+  title: string;
+  desc: string;
+  type: "Residencial" | "Comercial" | "Bombeamento" | "Manutenção";
+};
 
 export default function Home() {
-  const whatsapp = "5561999656269"; // ajuste se quiser
-  const waLink = useMemo(() => {
-    return `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-      "Olá! Quero um orçamento de energia solar. Pode me ajudar?"
-    )}`;
-  }, [whatsapp]);
+  const whatsapp = "5561999656269";
+
+const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
+  "Olá! Quero um orçamento de energia solar. Pode me ajudar?"
+)}`;
+
+const [loading, setLoading] = useState(false);
+const [notice, setNotice] =
+  useState<{ type: "ok" | "err"; text: string } | null>(null);
+const [filtroProjetos, setFiltroProjetos] = useState<
+  "Todos" | "Residencial" | "Comercial" | "Bombeamento" | "Manutenção"
+>("Todos");
+
+const [projetoSelecionado, setProjetoSelecionado] =
+  useState<ProjetoSelecionado | null>(null);
+const projetos = [
+  { src: "/images/projetos/res-01.jpg", title: "Projeto Residencial", desc: "Sistema on-grid com instalação e homologação.", type: "Residencial" as const },
+  { src: "/images/projetos/res-02.jpg", title: "Residencial • Telhado", desc: "Organização, acabamento e alto padrão.", type: "Residencial" as const },
+  { src: "/images/projetos/res-03.jpg", title: "Residencial • Economia", desc: "Dimensionamento para reduzir a conta de energia.", type: "Residencial" as const },
+
+  { src: "/images/projetos/com-01.jpg", title: "Projeto Comercial", desc: "Solução para comércio com foco em retorno.", type: "Comercial" as const },
+  { src: "/images/projetos/com-02.jpg", title: "Comercial • Alta Demanda", desc: "Projeto dimensionado para consumo elevado.", type: "Comercial" as const },
+
+  { src: "/images/projetos/bom-01.jpg", title: "Bombeamento Solar", desc: "Poço/irrigação com eficiência e baixo custo.", type: "Bombeamento" as const },
+  { src: "/images/projetos/bom-02.jpg", title: "Bombeamento • Área Rural", desc: "Solução para fazenda e áreas remotas.", type: "Bombeamento" as const },
+
+  { src: "/images/projetos/man-01.jpg", title: "Manutenção Preventiva", desc: "Revisão e inspeção para manter alta geração.", type: "Manutenção" as const },
+  { src: "/images/projetos/man-02.jpg", title: "Manutenção e Limpeza", desc: "Limpeza técnica e testes de desempenho.", type: "Manutenção" as const },
+];
+const projetosFiltrados =
+  filtroProjetos === "Todos" ? projetos : projetos.filter((p) => p.type === filtroProjetos);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
@@ -20,9 +52,6 @@ export default function Home() {
     consumption: "",
     message: "",
   });
-
-  const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function submitLead() {
     setNotice(null);
@@ -59,117 +88,292 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      {/* Top bar */}
-      <div className="border-b border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-3 text-sm text-white/70 flex flex-wrap gap-3 justify-between">
-          <div>Atendimento em todo o Brasil • Projetos • Instalação • Manutenção</div>
-          <div className="flex gap-4">
-            <a className="hover:text-white" href={waLink} target="_blank" rel="noreferrer">
-              WhatsApp
-            </a>
-            <a className="hover:text-white" href="#contato">
-              Contato
-            </a>
-          </div>
-        </div>
-      </div>
+     {/* TOP BAR (novo) */}
+     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur">
+       <div className="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between gap-4">
+         {/* Logo (texto por enquanto) */}
+         <a href="#topo" className="flex items-center gap-3">
+           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500" />
+           <div className="leading-tight">
+             <div className="font-semibold text-white">DC SOLAR</div>
+             <div className="text-xs text-white/60">Energia Solar • Brasil</div>
+           </div>
+         </a>
+
+         {/* Menu */}
+         <nav className="hidden md:flex items-center gap-5 text-sm text-white/70">
+           <a className="hover:text-white" href="#empresa">Empresa</a>
+           <a className="hover:text-white" href="#solucoes">Soluções</a>
+           <a className="hover:text-white" href="#projetos">Projetos</a>
+           <a className="hover:text-white" href="#servicos">Serviços</a>
+           <a className="hover:text-white" href="#suporte">Suporte</a>
+         </nav>
+
+         {/* Ações */}
+         <div className="flex items-center gap-3">
+           <a
+             className="hidden sm:inline-flex text-sm text-white/70 hover:text-white"
+             href={waLink}
+             target="_blank"
+             rel="noreferrer"
+           >
+             WhatsApp
+           </a>
+
+           <a
+             href="#orcamento"
+             className="inline-flex items-center justify-center rounded-xl bg-white text-black px-4 py-2 text-sm font-medium hover:opacity-90"
+           >
+             Pedir orçamento
+           </a>
+         </div>
+       </div>
+      </header> 
 
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.45),transparent_55%),radial-gradient(circle_at_bottom,rgba(245,158,11,0.35),transparent_55%)]" />
-        <div className="mx-auto max-w-6xl px-6 py-20 relative">
-          <div className="max-w-3xl">
-            <p className="text-white/70 text-sm tracking-wide">
-              DC SOLAR • Energia solar on-grid, off-grid e bombeamento
-            </p>
-            <h1 className="mt-4 text-4xl md:text-6xl font-semibold leading-tight">
-              Energia Solar Completa:{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                venda, instalação e manutenção
-              </span>
-            </h1>
-            <p className="mt-6 text-white/75 text-lg leading-relaxed">
-              Projetos dimensionados, homologação, instalação profissional e suporte pós-venda.
-              Soluções para residências, comércios, indústrias e áreas rurais — em todo o Brasil.
+      <section className="relative min-h-[90vh] flex items-center">
+        <img
+          src="/images/projetos/hero-solar.jpg"
+          alt="Instalação de energia solar"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60" />
+
+         <div className="relative z-10 mx-auto max-w-6xl px-6 text-white">
+           <p className="text-sm text-white/70">
+             DC SOLAR • Energia solar em todo o Brasil
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <a
-                href="#orcamento"
-                className="inline-flex items-center justify-center rounded-xl bg-white text-black px-5 py-3 font-medium hover:opacity-90"
-              >
-                Pedir orçamento agora
+             <h1 className="mt-4 text-4xl md:text-6xl font-bold leading-tight">
+               Energia Solar que{" "}
+              <span className="text-yellow-400">gera economia</span>{" "}
+                e valor para o seu imóvel
+              </h1>
+
+               <p className="mt-6 max-w-2xl text-lg text-white/80">
+                 Venda, projetos, instalação e manutenção de sistemas solares
+                 on-grid, off-grid e bombeamento.
+                </p>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+               <a
+                 href="#orcamento"
+                 className="bg-yellow-400 text-black px-6 py-3 rounded-xl font-semibold hover:opacity-90"
+               >
+                Solicitar orçamento
               </a>
               <a
-                href={waLink}
+                href="https://wa.me/5561999656269"
                 target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center rounded-xl border border-white/20 px-5 py-3 font-medium hover:bg-white/10"
+                className="border border-white/40 px-6 py-3 rounded-xl"
               >
-                Falar no WhatsApp
+               WhatsApp
               </a>
             </div>
+           </div>
+       </section>
+       {/* EMPRESA */}
+       <section id="empresa" className="mx-auto max-w-6xl px-6 py-16">
+         <div className="grid lg:grid-cols-2 gap-10 items-start">
+           <div>
+             <h2 className="text-2xl md:text-3xl font-semibold">Sobre a DC SOLAR</h2>
+             <p className="mt-4 text-white/70 leading-relaxed">
+               Atuamos com soluções completas em energia solar: projetos, venda de equipamentos,
+               instalação profissional e manutenção. Atendimento em todo o Brasil, com dimensionamento
+               sob medida para residências, comércios, indústrias e área rural.
+             </p>
 
-            <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-              {[
-                ["Projeto + Homologação", "Concessionária"],
-                ["Instalação Profissional", "Equipe técnica"],
-                ["Manutenção", "Preventiva e corretiva"],
-                ["Bombeamento Solar", "Poço e irrigação"],
-              ].map(([t, s]) => (
-                <div key={t} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="font-medium">{t}</div>
-                  <div className="text-white/60 mt-1">{s}</div>
+             <div className="mt-6 grid sm:grid-cols-2 gap-4 text-sm">
+               {[
+                 ["Projeto e homologação", "Acompanhamento com concessionária"],
+                 ["Equipe especializada", "Instalação segura e organizada"],
+                 ["Pós-venda", "Suporte e manutenção"],
+                 ["Soluções completas", "On-grid, off-grid e bombeamento"],
+                ].map(([t, s]) => (
+                  <div key={t} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="font-medium">{t}</div>
+                    <div className="text-white/60 mt-1">{s}</div>
+                  </div>
+                ))}
+               </div>
+
+               <div className="mt-8 flex gap-3">
+                 <a
+                   href="#orcamento"
+                   className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-5 py-3 font-semibold hover:opacity-90"
+                 >
+                   Simular orçamento
+                 </a>
+                 <a
+                   href={waLink}
+                   target="_blank"
+                   rel="noreferrer"
+                   className="rounded-xl border border-white/20 px-5 py-3 hover:bg-white/10"
+                 >
+                   Tirar dúvidas no WhatsApp
+                 </a>
+               </div>
+             </div>
+
+             <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/5">
+               <img
+                 src="/images/projetos/equipe.jpg"
+                 alt="Equipe DC SOLAR"
+                 className="w-full h-[420px] object-cover"
+               />
+             </div>
+           </div>
+          </section>
+      {/* SOLUÇÕES */}
+      <section id="solucoes" className="mx-auto max-w-6xl px-6 py-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-3xl font-semibold">Projetos de Energia Solar</h2>
+          <p className="mt-3 text-white/70">
+            Alguns exemplos de soluções entregues aos nossos clientes.
+           </p>
+
+          <div className="mt-10 grid md:grid-cols-3 gap-6">
+            {[
+              { img: "/images/projetos/res-01.jpg", title: "Residencial" },
+              { img: "/images/projetos/com-01.jpg", title: "Comercial" },
+              { img: "/images/projetos/bom-01.jpg", title: "Bombeamento Solar" },
+             ].map((p) => (
+               <div
+                 key={p.title}
+                 className="rounded-2xl overflow-hidden border border-white/10"
+              >
+                 <img src={p.img} className="h-56 w-full object-cover" />
+                 <div className="p-5 bg-black/80">
+                  <h3 className="text-lg font-semibold">{p.title}</h3>
+                  <p className="text-sm text-white/60 mt-1">
+                    Projeto completo com instalação profissional.
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-
-      {/* SOLUÇÕES */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="text-2xl md:text-3xl font-semibold">Soluções</h2>
-        <p className="mt-3 text-white/70 max-w-3xl">
-          Escolha o tipo ideal para sua necessidade. Se não souber, a gente dimensiona para você.
-        </p>
-
-        <div className="mt-8 grid md:grid-cols-3 gap-6">
-          {[
-            {
-              title: "On-grid",
-              desc: "Conectado à rede elétrica. Reduz sua conta de luz com ótimo custo-benefício. Inclui projeto e homologação.",
-              tag: "Residencial • Comercial • Industrial",
-            },
-            {
-              title: "Off-grid",
-              desc: "Autonomia com baterias. Ideal para áreas remotas, sítios e locais sem rede confiável.",
-              tag: "Autonomia • Baterias",
-            },
-            {
-              title: "Bombeamento Solar",
-              desc: "Bombeamento para poço, irrigação e reserva. Dimensionado por vazão e altura manométrica.",
-              tag: "Poço • Irrigação • Fazenda",
-            },
-          ].map((c) => (
-            <div key={c.title} className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold">{c.title}</h3>
-                <span className="text-xs rounded-full border border-white/15 px-3 py-1 text-white/70">
-                  {c.tag}
-                </span>
-              </div>
-              <p className="mt-4 text-white/70 leading-relaxed">{c.desc}</p>
-              <a href="#orcamento" className="mt-6 inline-flex text-sm font-medium hover:underline">
-                Quero orçamento →
-              </a>
+      {/* PROJETOS (Galeria dinâmica) */}
+      <section id="projetos" className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-semibold">Projetos de Energia Solar</h2>
+              <p className="mt-3 text-white/70 max-w-3xl">
+                Galeria com exemplos de projetos entregues: instalação profissional, organização e
+                acabamento. Clique em uma foto para ver em destaque.
+              </p>
             </div>
-          ))}
+
+            {/* Filtros */}
+            <div className="flex flex-wrap gap-2 text-sm">
+              {["Todos", "Residencial", "Comercial", "Bombeamento", "Manutenção"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                   onClick={() => setFiltroProjetos(t as any)}
+                   className={`rounded-full px-4 py-2 border transition ${
+                   filtroProjetos === t
+                     ? "bg-white text-black border-white"
+                     : "border-white/15 text-white/70 hover:bg-white/10"
+                 }`}
+                >
+                 {t}
+                </button>
+            ))}
+          </div>
+        </div>
+
+         {/* GRID */}
+         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+           {projetosFiltrados.map((p) => (
+              <button
+                key={p.src}
+                type="button"
+                onClick={() => setProjetoSelecionado(p)}
+                className="text-left rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition"
+             >
+                <img src={p.src} alt={p.title} className="h-52 w-full object-cover" />
+                <div className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                  <h3 className="font-semibold">{p.title}</h3>
+                  <span className="text-xs rounded-full border border-white/15 px-3 py-1 text-white/70">
+                    {p.type}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-white/70">{p.desc}</p>
+              </div>
+            </button>
+           ))}
+        </div>
+
+         {/* MODAL */}
+         {projetoSelecionado && (
+           <div
+             className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+             onClick={() => setProjetoSelecionado(null)}
+           >
+            <div
+              className="w-full max-w-4xl rounded-3xl overflow-hidden border border-white/10 bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative">
+                <img
+                  src={projetoSelecionado.src}
+                  alt={projetoSelecionado.title}
+                  className="w-full max-h-[70vh] object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setProjetoSelecionado(null)}
+                  className="absolute top-4 right-4 rounded-full bg-black/60 border border-white/15 px-4 py-2 text-sm hover:bg-black/80"
+                >
+                  Fechar ✕
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                  <div>
+                    <div className="text-xs text-white/60">Categoria</div>
+                    <div className="mt-1 inline-flex text-xs rounded-full border border-white/15 px-3 py-1 text-white/80">
+                      {projetoSelecionado.type}
+                    </div>
+
+                     <h3 className="mt-3 text-xl font-semibold">{projetoSelecionado.title}</h3>
+                     <p className="mt-2 text-white/70">{projetoSelecionado.desc}</p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 min-w-[240px]">
+                    <a
+                       href="#orcamento"
+                       className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-5 py-3 font-semibold hover:opacity-90 text-center"
+                       onClick={() => setProjetoSelecionado(null)}
+                    >
+                       Pedir orçamento
+                    </a>
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-xl border border-white/15 px-5 py-3 hover:bg-white/10 text-center"
+                    >
+                      Falar no WhatsApp
+                    </a>
+                    <div className="text-xs text-white/50">
+                      Atendimento em todo o Brasil • Instalação • Manutenção
+                    </div>
+                   </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
-
       {/* SERVIÇOS */}
-      <section className="border-t border-white/10">
+      <section id="servicos" className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="text-2xl md:text-3xl font-semibold">Serviços</h2>
           <div className="mt-8 grid md:grid-cols-4 gap-6">
@@ -376,7 +580,54 @@ export default function Home() {
           ))}
         </div>
       </section>
+      {/* SUPORTE */}
+      <section id="suporte" className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="text-2xl md:text-3xl font-semibold">Suporte</h2>
+          <p className="mt-3 text-white/70 max-w-3xl">
+             Precisa de ajuda com seu sistema? Atendimento para manutenção, limpeza técnica,
+             falhas de geração, inversor, monitoramento e revisão preventiva.
+          </p>
 
+          <div className="mt-8 grid md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="font-semibold">Suporte WhatsApp</div>
+              <p className="mt-3 text-white/70 text-sm">
+                 Atendimento rápido para tirar dúvidas, solicitar visita e suporte técnico.
+              </p>
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 inline-flex text-sm font-medium hover:underline"
+              >
+                Chamar no WhatsApp →
+              </a>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="font-semibold">Abrir chamado</div>
+              <p className="mt-3 text-white/70 text-sm">
+                Informe seu nome, cidade e o problema no formulário de orçamento e selecione “Manutenção”.
+              </p>
+              <a href="#orcamento" className="mt-5 inline-flex text-sm font-medium hover:underline">
+                Ir para o formulário →
+              </a>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="font-semibold">Horário de atendimento</div>
+              <p className="mt-3 text-white/70 text-sm">
+                Segunda a sexta: 08h às 18h <br />
+                Sábado: 08h às 12h
+              </p>
+              <p className="mt-4 text-white/60 text-sm">
+                Emergências: atendimento via WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* CONTATO + RODAPÉ */}
       <footer id="contato" className="border-t border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-12">
