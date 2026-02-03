@@ -79,7 +79,7 @@ export default function AdminLeadsPage() {
   const [statusDraft, setStatusDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
-
+  const [statusFilter, setStatusFilter] = useState<"todos" | "novo" | "em_contato" | "fechado">("todos");
   async function load() {
     setLoading(true);
     const r = await fetch("/api/admin/leads", { cache: "no-store" });
@@ -105,15 +105,46 @@ export default function AdminLeadsPage() {
     load();
   }, []);
 
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return leads;
-    return leads.filter((l) =>
+  const stats = useMemo(() => {
+  const novo = leads.filter((l) => (l.status || "novo") === "novo").length;
+  const em_contato = leads.filter((l) => l.status === "em_contato").length;
+  const fechado = leads.filter((l) => l.status === "fechado").length;
+  return {
+    total: leads.length,
+    novo,
+    em_contato,
+    fechado,
+  };
+}, [leads]);
+
+const filtered = useMemo(() => {
+  const s = q.trim().toLowerCase();
+
+  // 1) filtro por status
+  let list = leads;
+  if (statusFilter !== "todos") {
+    list = list.filter((l) => (l.status || "novo") === statusFilter);
+  }
+
+  // 2) busca
+  if (s) {
+    list = list.filter((l) =>
       [l.name, l.phone, l.city, l.systemType, l.consumption, l.message, l.status, l.source].some(
         (v) => String(v || "").toLowerCase().includes(s)
       )
     );
-  }, [leads, q]);
+  }
+
+  // 3) ordenar por mais recente
+  list = [...list].sort((a, b) => {
+    const da = a.createdAt ? Date.parse(a.createdAt) : 0;
+    const db = b.createdAt ? Date.parse(b.createdAt) : 0;
+    return db - da; // desc
+  });
+
+  return list;
+}, [leads, q, statusFilter]);
+
 
   function exportCSV() {
     const csv = toCSV(filtered);
@@ -204,6 +235,12 @@ export default function AdminLeadsPage() {
             placeholder="Buscar por nome, telefone, cidade, sistema, consumo, status..."
             className="w-full max-w-2xl rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none"
           />
+          <button
+            onClick={() => setQ("")}
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm hover:bg-white/10"
+          >
+            Limpar
+          </button>
           <div className="text-sm text-white/70">
             {loading ? "Carregando..." : `${filtered.length} lead(s)`}
           </div>
@@ -215,6 +252,53 @@ export default function AdminLeadsPage() {
             {toast}
           </div>
         )}
+        
+        {/* Filtros por status */}
+<div className="mt-4 flex flex-wrap gap-2">
+  <button
+    onClick={() => setStatusFilter("todos")}
+    className={`rounded-xl border px-4 py-2 text-sm ${
+      statusFilter === "todos"
+        ? "border-yellow-400 bg-yellow-400 text-black"
+        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+    }`}
+  >
+    Todos ({stats.total})
+  </button>
+
+  <button
+    onClick={() => setStatusFilter("novo")}
+    className={`rounded-xl border px-4 py-2 text-sm ${
+      statusFilter === "novo"
+        ? "border-yellow-400 bg-yellow-400 text-black"
+        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+    }`}
+  >
+    Novo ({stats.novo})
+  </button>
+
+  <button
+    onClick={() => setStatusFilter("em_contato")}
+    className={`rounded-xl border px-4 py-2 text-sm ${
+      statusFilter === "em_contato"
+        ? "border-yellow-400 bg-yellow-400 text-black"
+        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+    }`}
+  >
+    Em contato ({stats.em_contato})
+  </button>
+
+  <button
+    onClick={() => setStatusFilter("fechado")}
+    className={`rounded-xl border px-4 py-2 text-sm ${
+      statusFilter === "fechado"
+        ? "border-yellow-400 bg-yellow-400 text-black"
+        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+    }`}
+  >
+    Fechado ({stats.fechado})
+  </button>
+</div>
 
         {/* Tabela */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
@@ -268,6 +352,19 @@ export default function AdminLeadsPage() {
 
                   {/* Status */}
                   <div className="col-span-2">
+ 
+                    <div className="mb-2 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs">
+                       <span
+                         className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                           (statusDraft[id] || "novo") === "novo"
+                             ? "bg-yellow-400"
+                             : (statusDraft[id] || "novo") === "em_contato"
+                             ? "bg-blue-400"
+                             : "bg-green-400"
+                         }`}
+                       />
+                       <span className="text-white/80">{statusDraft[id] || "novo"}</span>
+                    </div>
                     <select
                       value={statusDraft[id] || "novo"}
                       onChange={(e) =>
