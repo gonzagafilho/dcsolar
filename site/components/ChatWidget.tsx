@@ -188,7 +188,7 @@ export default function ChatWidget() {
       {/* Botão flutuante */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-50 rounded-full shadow-lg px-4 py-3 bg-black text-white"
+        className="fixed bottom-24 right-5 z-50 rounded-full shadow-lg px-4 py-3 bg-black text-white"
         aria-label="Abrir chat"
       >
         {open ? "Fechar" : "Chat"}
@@ -196,7 +196,7 @@ export default function ChatWidget() {
 
       {/* Janela */}
       {open && (
-        <div className="fixed bottom-20 right-5 z-50 w-[92vw] max-w-sm rounded-2xl shadow-2xl bg-white border overflow-hidden">
+        <div className="fixed bottom-36 right-5 z-50 w-[92vw] max-w-sm rounded-2xl shadow-2xl bg-white border overflow-hidden">
           <div className="px-4 py-3 bg-black text-white">
             <div className="font-semibold">DC Infinity Solar</div>
             <div className="text-xs opacity-80">Atendimento automático</div>
