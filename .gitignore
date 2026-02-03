@@ -1,0 +1,17 @@
+# env
+.env
+.env.local
+
+# cookies / sessões
+cookies.txt
+
+# build
+.next
+dist
+node_modules
+
+# logs
+*.log
+
+# backups
+*.bak
