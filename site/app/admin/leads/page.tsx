@@ -1,7 +1,29 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+function TipoBadge({ tipo }: { tipo?: string }) {
+  const t = (tipo || "").toLowerCase();
 
+  let label = tipo || "—";
+  let cls = "bg-gray-100 text-gray-800 border-gray-200";
+
+  if (t.includes("off")) {
+    label = "Off-grid";
+    cls = "bg-yellow-100 text-yellow-900 border-yellow-200";
+  } else if (t.includes("bombe")) {
+    label = "Bombeamento";
+    cls = "bg-blue-100 text-blue-900 border-blue-200";
+  } else if (t.includes("on")) {
+    label = "On-grid";
+    cls = "bg-green-100 text-green-900 border-green-200";
+  }
+
+  return (
+    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${cls}`}>
+      {label}
+    </span>
+  );
+}
 type Lead = {
   _id: string;
   name?: string;
@@ -342,7 +364,10 @@ const filtered = useMemo(() => {
 
                   {/* Sistema */}
                   <div className="col-span-2 text-sm text-white/80">
-                    {l.systemType || "—"}
+                    <TipoBadge tipo={l.systemType} />
+                    <div className="mt-2 text-xs text-white/60">
+                      {l.systemType || "—"}
+                    </div>
                   </div>
 
                   {/* Consumo */}
