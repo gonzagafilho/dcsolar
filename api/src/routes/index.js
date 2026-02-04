@@ -1,7 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const { createLead, listLeads, updateLeadStatus } = require("../controllers/leadController");
+const {
+  createLead,
+  listLeads,
+  updateLeadStatus,
+  deleteLead
+} = require("../controllers/leadController");
+
 const { saveChatMessage, listChatBySession } = require("../controllers/chatController");
 
 const adminAuth = require("../middlewares/adminAuth");
@@ -13,7 +19,7 @@ router.get("/health", (_req, res) => res.json({ ok: true, service: "dcsolar-api"
 router.post("/leads", createLead);
 router.get("/leads", adminAuth, listLeads);
 router.patch("/leads/:id/status", adminAuth, updateLeadStatus);
-router.delete("/leads/:id", adminAuth, leadController.deleteLead);
+router.delete("/leads/:id", adminAuth, deleteLead);
 
 // chat
 router.post("/chat/messages", saveChatMessage);
