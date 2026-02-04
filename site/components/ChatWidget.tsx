@@ -322,6 +322,25 @@ export default function ChatWidget() {
               Falar com humano
             </a>
           </div>
+          {/* Botões rápidos */}
+          <div className="px-3 py-2 border-b flex gap-2 flex-wrap">
+            {[
+              { label: "Orçamento", value: "ORÇAMENTO" },
+              { label: "On-grid", value: "O que é on-grid?" },
+              { label: "Off-grid", value: "O que é off-grid?" },
+              { label: "Bombeamento", value: "Como funciona bombeamento solar?" },
+              { label: "Garantia", value: "Qual a garantia?" },
+             ].map((b) => (
+               <button
+                 key={b.label}
+                 type="button"
+                 onClick={() => handleUser(b.value)}
+                 className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+              >
+                {b.label}
+              </button>
+           ))}
+          </div>
 
           <div className="h-80 overflow-y-auto p-3 space-y-3">
             {messages.map((m, i) => (
@@ -349,7 +368,7 @@ export default function ChatWidget() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Digite aqui…"
+              placeholder='Digite "ORÇAMENTO" ou sua dúvida…'
               className="flex-1 rounded-xl border px-3 py-2 text-sm outline-none"
             />
             <button className="rounded-xl px-4 py-2 bg-black text-white text-sm" disabled={loading}>
