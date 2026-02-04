@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   _req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
+  const { id } = context.params;
 
   const base = process.env.API_BASE_URL || "";
   const key = process.env.API_KEY || "";
@@ -24,12 +24,16 @@ export async function DELETE(
   }
 
   if (!id) {
-    return NextResponse.json({ ok: false, message: "ID ausente" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, message: "ID ausente" },
+      { status: 400 }
+    );
   }
 
   const r = await fetch(`${base}/leads/${id}`, {
     method: "DELETE",
     headers: {
+      "Content-Type": "application/json",
       "x-admin-key": key,
     },
     cache: "no-store",
