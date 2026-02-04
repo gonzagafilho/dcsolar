@@ -52,7 +52,7 @@ export default function ChatWidget() {
     phone: "",
     city: "",
     consumption: "",
-    systemType: "On-grid",
+    systemType: "On-grid" as "On-grid" | "Off-grid" | "Bombeamento",
     interest: "",
     originPath: "",
   });
@@ -64,6 +64,7 @@ export default function ChatWidget() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open, loading]);
 
+  // carregar conversa salva
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -76,6 +77,7 @@ export default function ChatWidget() {
     } catch {}
   }, []);
 
+  // salvar conversa
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
@@ -83,6 +85,7 @@ export default function ChatWidget() {
     );
   }, [messages, flow, lead, lastLeadAt]);
 
+  // atualiza origem/página
   useEffect(() => {
     setLead((l) => ({ ...l, originPath: pathname || "/" }));
   }, [pathname]);
@@ -102,7 +105,7 @@ export default function ChatWidget() {
           "Ideal para locais sem rede ou quem busca autonomia."
       },
       {
-        keys: ["bombeamento"],
+        keys: ["bombeamento", "bomba", "poço", "poco"],
         answer:
           "💧 **Bombeamento solar** usa energia do sol para acionar bombas d’água."
       }
@@ -123,6 +126,27 @@ export default function ChatWidget() {
     add("bot", "Se quiser, posso abrir um ORÇAMENTO rapidinho 😉");
   }
 
+  // ✅ RESET PROFISSIONAL (limpa estado salvo)
+  function resetChat() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+
+    setMessages(initialMessages);
+    setFlow("idle");
+    setLead({
+      name: "",
+      phone: "",
+      city: "",
+      consumption: "",
+      systemType: "On-grid",
+      interest: "",
+      originPath: pathname || "/",
+    });
+    setInput("");
+    add("bot", "Conversa reiniciada ✅ Como posso te ajudar agora?");
+  }
+
   async function submitLead(finalLead: typeof lead) {
     const now = Date.now();
     if (now - lastLeadAt < COOLDOWN_MS) {
@@ -138,13 +162,13 @@ export default function ChatWidget() {
         body: JSON.stringify(finalLead),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       setLastLeadAt(now);
 
       add(
         "bot",
         "✅ Pedido enviado!\n" +
-          `• Tipo: ${finalLead.interest}\n` +
+          `• Tipo: ${finalLead.interest || finalLead.systemType}\n` +
           `• Cidade: ${finalLead.city}\n` +
           `• Consumo: ${finalLead.consumption} kWh`
       );
@@ -161,15 +185,25 @@ export default function ChatWidget() {
     const text = textRaw.trim();
     if (!text) return;
 
+    const t = normalize(text);
+
+    // ✅ comandos
+    if (t === "reset" || t === "reiniciar") {
+      add("user", text);
+      setInput("");
+      resetChat();
+      return;
+    }
+
     add("user", text);
     setInput("");
 
-    const t = normalize(text);
+    // ✅ detecção de contexto (sem falso positivo)
+    if (t.includes("off grid") || t.includes("offgrid")) setContext("Off-grid");
+    if (t.includes("on grid") || t.includes("ongrid")) setContext("On-grid");
+    if (t.includes("bombeamento") || t.includes("bomba") || t.includes("poco") || t.includes("poço")) setContext("Bombeamento");
 
-    if (t.includes("off")) setContext("Off-grid");
-    if (t.includes("on")) setContext("On-grid");
-    if (t.includes("bombe")) setContext("Bombeamento");
-
+    // fluxo de coleta
     if (flow === "collect_name") {
       setLead((l) => ({ ...l, name: text }));
       setFlow("collect_phone");
@@ -179,7 +213,10 @@ export default function ChatWidget() {
 
     if (flow === "collect_phone") {
       const phone = onlyDigits(text);
-      if (phone.length < 10) return add("bot", "Telefone inválido.");
+      if (phone.length < 10) {
+        add("bot", "Telefone inválido.");
+        return;
+      }
       setLead((l) => ({ ...l, phone }));
       setFlow("collect_city");
       add("bot", `Ok ${formatPhoneBR(phone)}. Sua cidade?`);
@@ -195,13 +232,28 @@ export default function ChatWidget() {
 
     if (flow === "collect_consumption") {
       const kwh = onlyDigits(text);
-      const finalLead = { ...lead, consumption: kwh };
-      add("bot", "Enviando seu pedido…");
+      if (!kwh) {
+        add("bot", "Me diga apenas o número do consumo em kWh (ex: 350).");
+        return;
+      }
+
+      const finalLead = { ...lead, consumption: kwh, originPath: pathname || "/" };
+
+      add(
+        "bot",
+        "✅ Resumo do seu pedido:\n" +
+          `• Tipo: ${finalLead.interest || finalLead.systemType}\n` +
+          `• Cidade: ${finalLead.city}\n` +
+          `• Consumo: ${finalLead.consumption} kWh/mês\n\n` +
+          "Enviando agora…"
+      );
+
       submitLead(finalLead);
       return;
     }
 
-    if (t.includes("orcamento")) {
+    // atalho orçamento
+    if (t.includes("orcamento") || t.includes("orçamento")) {
       setFlow("collect_name");
       add(
         "bot",
@@ -210,6 +262,7 @@ export default function ChatWidget() {
       return;
     }
 
+    // FAQ
     for (const f of faq) {
       if (f.keys.some((k) => t.includes(k))) {
         replyDirect(f.answer);
@@ -217,7 +270,7 @@ export default function ChatWidget() {
       }
     }
 
-    add("bot", "Digite ORÇAMENTO ou escolha uma opção acima 👆");
+    add("bot", "Digite ORÇAMENTO ou escolha uma opção acima 👆 (ou digite REINICIAR)");
   }
 
   const whatsappLink =
@@ -235,7 +288,7 @@ export default function ChatWidget() {
 
       {open && (
         <div className="fixed bottom-36 right-5 z-50 w-[92vw] max-w-sm rounded-2xl shadow-2xl bg-white border overflow-hidden">
-          <div className="px-4 py-3 bg-black text-white flex justify-between">
+          <div className="px-4 py-3 bg-black text-white flex justify-between items-center">
             <div>
               <div className="font-semibold">DC Infinity Solar</div>
               <div className="text-xs opacity-80">Atendimento automático</div>
@@ -243,6 +296,7 @@ export default function ChatWidget() {
             <a
               href={whatsappLink}
               target="_blank"
+              rel="noreferrer"
               className="text-xs bg-white/20 px-3 py-1 rounded-full"
             >
               Falar com humano
@@ -250,16 +304,57 @@ export default function ChatWidget() {
           </div>
 
           <div className="px-3 py-2 border-b flex gap-2 flex-wrap">
-            <button onClick={() => { setContext("On-grid"); replyDirect(faq[0].answer); }} className="text-xs px-3 py-1 border rounded-full">On-grid</button>
-            <button onClick={() => { setContext("Off-grid"); replyDirect(faq[1].answer); }} className="text-xs px-3 py-1 border rounded-full">Off-grid</button>
-            <button onClick={() => { setContext("Bombeamento"); replyDirect(faq[2].answer); }} className="text-xs px-3 py-1 border rounded-full">Bombeamento</button>
-            <button onClick={() => { setFlow("collect_name"); add("bot", "Qual seu nome?"); }} className="text-xs px-3 py-1 border rounded-full">Orçamento</button>
+            <button
+              type="button"
+              onClick={() => { setContext("On-grid"); replyDirect(faq[0].answer); }}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              On-grid
+            </button>
+            <button
+              type="button"
+              onClick={() => { setContext("Off-grid"); replyDirect(faq[1].answer); }}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              Off-grid
+            </button>
+            <button
+              type="button"
+              onClick={() => { setContext("Bombeamento"); replyDirect(faq[2].answer); }}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              Bombeamento
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFlow("collect_name");
+                add("bot", `Perfeito 😄 Vou montar um orçamento de **${lead.interest || "energia solar"}**.\nQual seu nome?`);
+              }}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              Orçamento
+            </button>
+            <button
+              type="button"
+              onClick={resetChat}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              Reiniciar
+            </button>
           </div>
 
           <div className="h-80 overflow-y-auto p-3 space-y-3">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`px-3 py-2 rounded-2xl text-sm ${m.role === "user" ? "bg-black text-white" : "bg-gray-100"}`}>
+              <div
+                key={i}
+                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-line ${
+                    m.role === "user" ? "bg-black text-white" : "bg-gray-100"
+                  }`}
+                >
                   {m.text}
                 </div>
               </div>
@@ -281,7 +376,12 @@ export default function ChatWidget() {
               placeholder='Digite "ORÇAMENTO" ou sua dúvida…'
               className="flex-1 border rounded-xl px-3 py-2 text-sm"
             />
-            <button className="px-4 py-2 bg-black text-white rounded-xl">Enviar</button>
+            <button
+              className="px-4 py-2 bg-black text-white rounded-xl"
+              disabled={loading}
+            >
+              Enviar
+            </button>
           </form>
         </div>
       )}
