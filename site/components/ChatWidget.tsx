@@ -203,6 +203,16 @@ export default function ChatWidget() {
     setInput("");
 
     const t = normalize(text);
+    // Detecta interesse e salva no lead (quando o usuário digita)
+    if (t.includes("off grid") || t.includes("offgrid")) {
+      setLead((l) => ({ ...l, systemType: "Off-grid" }));
+    }
+    if (t.includes("bombeamento") || t.includes("bomba") || t.includes("poco") || t.includes("poço")) {
+  setLead((l) => ({ ...l, systemType: "Bombeamento" }));
+    }
+    if (t.includes("on grid") || t.includes("ongrid")) {
+       setLead((l) => ({ ...l, systemType: "On-grid" }));
+    }
 
     // comandos rápidos
     if (t === "reset" || t === "reiniciar") {
@@ -324,24 +334,58 @@ export default function ChatWidget() {
           </div>
           {/* Botões rápidos */}
           <div className="px-3 py-2 border-b flex gap-2 flex-wrap">
-            {[
-              { label: "Orçamento", value: "ORÇAMENTO" },
-              { label: "On-grid", value: "O que é on-grid?" },
-              { label: "Off-grid", value: "O que é off-grid?" },
-              { label: "Bombeamento", value: "Como funciona bombeamento solar?" },
-              { label: "Garantia", value: "Qual a garantia?" },
-             ].map((b) => (
-               <button
-                 key={b.label}
-                 type="button"
-                 onClick={() => handleUser(b.value)}
-                 className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
-              >
-                {b.label}
-              </button>
-           ))}
-          </div>
+            <button
+              type="button"
+              onClick={() => {
+                setLead((l) => ({ ...l, systemType: "On-grid" }));
+                handleUser("ORÇAMENTO");
+              }}
+              className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+            >
+              Orçamento
+            </button>
 
+            <button
+              type="button"
+              onClick={() => {
+                setLead((l) => ({ ...l, systemType: "On-grid" }));
+                handleUser("O que é on-grid?");
+            }}
+            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+          >
+            On-grid
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setLead((l) => ({ ...l, systemType: "Off-grid" }));
+              handleUser("O que é off-grid?");
+            }}
+            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+          >
+            Off-grid
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setLead((l) => ({ ...l, systemType: "Bombeamento" }));
+              handleUser("Como funciona bombeamento solar?");
+            }}
+             className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+          >
+             Bombeamento
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleUser("Qual a garantia?")}
+            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+          >
+            Garantia
+          </button>
+        </div>
           <div className="h-80 overflow-y-auto p-3 space-y-3">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
