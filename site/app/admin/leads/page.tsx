@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+
 function TipoBadge({ tipo }: { tipo?: string }) {
   const t = (tipo || "").toLowerCase();
 
@@ -19,11 +20,14 @@ function TipoBadge({ tipo }: { tipo?: string }) {
   }
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${cls}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border ${cls}`}
+    >
       {label}
     </span>
   );
 }
+
 type Lead = {
   _id: string;
   name?: string;
@@ -101,7 +105,13 @@ export default function AdminLeadsPage() {
   const [statusDraft, setStatusDraft] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"todos" | "novo" | "em_contato" | "fechado">("todos");
+  const [statusFilter, setStatusFilter] = useState<
+    "todos" | "novo" | "em_contato" | "fechado"
+  >("todos");
+
+  // ✅ seleção (checkbox)
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+
   async function load() {
     setLoading(true);
     const r = await fetch("/api/admin/leads", { cache: "no-store" });
@@ -128,45 +138,137 @@ export default function AdminLeadsPage() {
   }, []);
 
   const stats = useMemo(() => {
-  const novo = leads.filter((l) => (l.status || "novo") === "novo").length;
-  const em_contato = leads.filter((l) => l.status === "em_contato").length;
-  const fechado = leads.filter((l) => l.status === "fechado").length;
-  return {
-    total: leads.length,
-    novo,
-    em_contato,
-    fechado,
-  };
-}, [leads]);
+    const novo = leads.filter((l) => (l.status || "novo") === "novo").length;
+    const em_contato = leads.filter((l) => l.status === "em_contato").length;
+    const fechado = leads.filter((l) => l.status === "fechado").length;
+    return {
+      total: leads.length,
+      novo,
+      em_contato,
+      fechado,
+    };
+  }, [leads]);
 
-const filtered = useMemo(() => {
-  const s = q.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
 
-  // 1) filtro por status
-  let list = leads;
-  if (statusFilter !== "todos") {
-    list = list.filter((l) => (l.status || "novo") === statusFilter);
+    // 1) filtro por status
+    let list = leads;
+    if (statusFilter !== "todos") {
+      list = list.filter((l) => (l.status || "novo") === statusFilter);
+    }
+
+    // 2) busca
+    if (s) {
+      list = list.filter((l) =>
+        [
+          l.name,
+          l.phone,
+          l.city,
+          l.systemType,
+          l.consumption,
+          l.message,
+          l.status,
+          l.source,
+        ].some((v) => String(v || "").toLowerCase().includes(s))
+      );
+    }
+
+    // 3) ordenar por mais recente
+    list = [...list].sort((a, b) => {
+      const da = a.createdAt ? Date.parse(a.createdAt) : 0;
+      const db = b.createdAt ? Date.parse(b.createdAt) : 0;
+      return db - da; // desc
+    });
+
+    return list;
+  }, [leads, q, statusFilter]);
+
+  // ✅ seleção calculada (AGORA filtered existe)
+  const selectedCount = useMemo(
+    () => filtered.filter((l) => !!selected[l._id]).length,
+    [filtered, selected]
+  );
+
+  const allSelected = useMemo(() => {
+    if (filtered.length === 0) return false;
+    return filtered.every((l) => !!selected[l._id]);
+  }, [filtered, selected]);
+
+  function toggleAll() {
+    setSelected((prev) => {
+      const next = { ...prev };
+      const every = filtered.length > 0 && filtered.every((l) => !!next[l._id]);
+
+      if (every) {
+        for (const l of filtered) delete next[l._id];
+      } else {
+        for (const l of filtered) next[l._id] = true;
+      }
+      return next;
+    });
   }
 
-  // 2) busca
-  if (s) {
-    list = list.filter((l) =>
-      [l.name, l.phone, l.city, l.systemType, l.consumption, l.message, l.status, l.source].some(
-        (v) => String(v || "").toLowerCase().includes(s)
+  function toggleOne(id: string) {
+    setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function clearSelection() {
+    setSelected((prev) => {
+      const next = { ...prev };
+      for (const l of filtered) delete next[l._id];
+      return next;
+    });
+  }
+
+  async function deleteOne(id: string) {
+    if (!confirm("Apagar este lead? Essa ação não pode ser desfeita.")) return;
+
+    const r = await fetch(`/api/admin/leads/${id}`, { method: "DELETE" });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      setToast(j?.message || "Erro ao apagar lead");
+      setTimeout(() => setToast(null), 2500);
+      return;
+    }
+
+    setLeads((prev) => prev.filter((x) => x._id !== id));
+    setSelected((prev) => {
+      const n = { ...prev };
+      delete n[id];
+      return n;
+    });
+
+    setToast("Lead apagado ✅");
+    setTimeout(() => setToast(null), 1800);
+  }
+
+  async function deleteSelected() {
+    const ids = filtered.filter((l) => selected[l._id]).map((l) => l._id);
+
+    if (ids.length === 0) {
+      setToast("Selecione pelo menos 1 lead");
+      setTimeout(() => setToast(null), 1800);
+      return;
+    }
+
+    if (
+      !confirm(
+        `Apagar ${ids.length} lead(s)? Essa ação não pode ser desfeita.`
       )
-    );
+    )
+      return;
+
+    for (const id of ids) {
+      await fetch(`/api/admin/leads/${id}`, { method: "DELETE" });
+    }
+
+    setLeads((prev) => prev.filter((l) => !ids.includes(l._id)));
+    clearSelection();
+
+    setToast("Leads apagados ✅");
+    setTimeout(() => setToast(null), 1800);
   }
-
-  // 3) ordenar por mais recente
-  list = [...list].sort((a, b) => {
-    const da = a.createdAt ? Date.parse(a.createdAt) : 0;
-    const db = b.createdAt ? Date.parse(b.createdAt) : 0;
-    return db - da; // desc
-  });
-
-  return list;
-}, [leads, q, statusFilter]);
-
 
   function exportCSV() {
     const csv = toCSV(filtered);
@@ -203,12 +305,19 @@ const filtered = useMemo(() => {
       return;
     }
 
-    // atualiza local sem reload
     const j = await r.json().catch(() => ({}));
     const updated: Lead | undefined = (j as any)?.lead;
 
     setLeads((prev) =>
-      prev.map((l) => (l._id === id ? { ...l, status: updated?.status ?? newStatus, updatedAt: updated?.updatedAt ?? l.updatedAt } : l))
+      prev.map((l) =>
+        l._id === id
+          ? {
+              ...l,
+              status: updated?.status ?? newStatus,
+              updatedAt: updated?.updatedAt ?? l.updatedAt,
+            }
+          : l
+      )
     );
 
     setToast("Status salvo ✅");
@@ -234,12 +343,30 @@ const filtered = useMemo(() => {
             >
               Atualizar
             </button>
+
             <button
               onClick={exportCSV}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 hover:bg-white/10"
             >
               Exportar CSV
             </button>
+
+            <button
+              onClick={deleteSelected}
+              disabled={selectedCount === 0}
+              className="rounded-xl border border-red-500/40 bg-red-500/20 px-4 py-2 hover:bg-red-500/30 disabled:opacity-50"
+            >
+              Apagar selecionados ({selectedCount})
+            </button>
+
+            <button
+              onClick={clearSelection}
+              disabled={selectedCount === 0}
+              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 hover:bg-white/10 disabled:opacity-50"
+            >
+              Limpar seleção
+            </button>
+
             <button
               onClick={logout}
               className="rounded-xl bg-red-500/90 px-4 py-2 font-semibold text-white hover:opacity-90"
@@ -274,58 +401,68 @@ const filtered = useMemo(() => {
             {toast}
           </div>
         )}
-        
+
         {/* Filtros por status */}
-<div className="mt-4 flex flex-wrap gap-2">
-  <button
-    onClick={() => setStatusFilter("todos")}
-    className={`rounded-xl border px-4 py-2 text-sm ${
-      statusFilter === "todos"
-        ? "border-yellow-400 bg-yellow-400 text-black"
-        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-    }`}
-  >
-    Todos ({stats.total})
-  </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => setStatusFilter("todos")}
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              statusFilter === "todos"
+                ? "border-yellow-400 bg-yellow-400 text-black"
+                : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+            }`}
+          >
+            Todos ({stats.total})
+          </button>
 
-  <button
-    onClick={() => setStatusFilter("novo")}
-    className={`rounded-xl border px-4 py-2 text-sm ${
-      statusFilter === "novo"
-        ? "border-yellow-400 bg-yellow-400 text-black"
-        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-    }`}
-  >
-    Novo ({stats.novo})
-  </button>
+          <button
+            onClick={() => setStatusFilter("novo")}
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              statusFilter === "novo"
+                ? "border-yellow-400 bg-yellow-400 text-black"
+                : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+            }`}
+          >
+            Novo ({stats.novo})
+          </button>
 
-  <button
-    onClick={() => setStatusFilter("em_contato")}
-    className={`rounded-xl border px-4 py-2 text-sm ${
-      statusFilter === "em_contato"
-        ? "border-yellow-400 bg-yellow-400 text-black"
-        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-    }`}
-  >
-    Em contato ({stats.em_contato})
-  </button>
+          <button
+            onClick={() => setStatusFilter("em_contato")}
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              statusFilter === "em_contato"
+                ? "border-yellow-400 bg-yellow-400 text-black"
+                : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+            }`}
+          >
+            Em contato ({stats.em_contato})
+          </button>
 
-  <button
-    onClick={() => setStatusFilter("fechado")}
-    className={`rounded-xl border px-4 py-2 text-sm ${
-      statusFilter === "fechado"
-        ? "border-yellow-400 bg-yellow-400 text-black"
-        : "border-white/10 bg-white/5 text-white hover:bg-white/10"
-    }`}
-  >
-    Fechado ({stats.fechado})
-  </button>
-</div>
+          <button
+            onClick={() => setStatusFilter("fechado")}
+            className={`rounded-xl border px-4 py-2 text-sm ${
+              statusFilter === "fechado"
+                ? "border-yellow-400 bg-yellow-400 text-black"
+                : "border-white/10 bg-white/5 text-white hover:bg-white/10"
+            }`}
+          >
+            Fechado ({stats.fechado})
+          </button>
+        </div>
 
         {/* Tabela */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-          <div className="grid grid-cols-12 gap-2 bg-white/5 px-4 py-3 text-sm text-white/70">
-            <div className="col-span-3">Cliente</div>
+          {/* Header da tabela (com selecionar todos) */}
+          <div className="grid grid-cols-12 gap-2 bg-white/5 px-4 py-3 text-sm text-white/70 items-center">
+            <div className="col-span-1">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={toggleAll}
+                className="h-4 w-4"
+                title="Selecionar todos"
+              />
+            </div>
+            <div className="col-span-2">Cliente</div>
             <div className="col-span-2">Cidade</div>
             <div className="col-span-2">Sistema</div>
             <div className="col-span-1">Consumo</div>
@@ -347,8 +484,19 @@ const filtered = useMemo(() => {
                   key={id}
                   className="grid grid-cols-12 gap-2 border-t border-white/10 px-4 py-4"
                 >
+                  {/* Checkbox */}
+                  <div className="col-span-1 flex items-start pt-1">
+                    <input
+                      type="checkbox"
+                      checked={!!selected[id]}
+                      onChange={() => toggleOne(id)}
+                      className="h-4 w-4"
+                      title="Selecionar"
+                    />
+                  </div>
+
                   {/* Cliente */}
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <div className="font-semibold">{l.name || "—"}</div>
                     <div className="text-sm text-white/80">{l.phone || "—"}</div>
                     <div className="mt-1 text-xs text-white/60">
@@ -377,19 +525,21 @@ const filtered = useMemo(() => {
 
                   {/* Status */}
                   <div className="col-span-2">
- 
                     <div className="mb-2 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs">
-                       <span
-                         className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                           (statusDraft[id] || "novo") === "novo"
-                             ? "bg-yellow-400"
-                             : (statusDraft[id] || "novo") === "em_contato"
-                             ? "bg-blue-400"
-                             : "bg-green-400"
-                         }`}
-                       />
-                       <span className="text-white/80">{statusDraft[id] || "novo"}</span>
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                          (statusDraft[id] || "novo") === "novo"
+                            ? "bg-yellow-400"
+                            : (statusDraft[id] || "novo") === "em_contato"
+                            ? "bg-blue-400"
+                            : "bg-green-400"
+                        }`}
+                      />
+                      <span className="text-white/80">
+                        {statusDraft[id] || "novo"}
+                      </span>
                     </div>
+
                     <select
                       value={statusDraft[id] || "novo"}
                       onChange={(e) =>
@@ -401,6 +551,7 @@ const filtered = useMemo(() => {
                       <option value="em_contato">em_contato</option>
                       <option value="fechado">fechado</option>
                     </select>
+
                     {l.message ? (
                       <div className="mt-2 text-xs text-white/60 line-clamp-2">
                         {l.message}
@@ -418,16 +569,26 @@ const filtered = useMemo(() => {
                       {saving[id] ? "Salvando..." : "Salvar"}
                     </button>
 
+                    <button
+                      onClick={() => deleteOne(id)}
+                      className="rounded-xl border border-red-500/40 bg-red-500/20 px-3 py-2 text-sm hover:bg-red-500/30"
+                    >
+                      Apagar
+                    </button>
+
                     {wa ? (
                       <a
                         href={wa}
                         target="_blank"
+                        rel="noreferrer"
                         className="rounded-xl bg-yellow-400 px-3 py-2 text-sm font-semibold text-black hover:opacity-90"
                       >
                         WhatsApp
                       </a>
                     ) : (
-                      <span className="px-3 py-2 text-xs text-white/50">Sem tel.</span>
+                      <span className="px-3 py-2 text-xs text-white/50">
+                        Sem tel.
+                      </span>
                     )}
                   </div>
                 </div>
@@ -439,4 +600,3 @@ const filtered = useMemo(() => {
     </main>
   );
 }
-
