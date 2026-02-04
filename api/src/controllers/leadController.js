@@ -113,10 +113,30 @@ async function updateLeadStatus(req, res) {
     return res.status(500).json({ ok: false, message: "Erro ao atualizar status" });
   }
 }
+// ============================
+// DELETE /leads/:id  (protegido por adminAuth)
+// ============================
+async function deleteLead(req, res) {
+  try {
+    const { id } = req.params;
+
+    const lead = await Lead.findByIdAndDelete(id);
+
+    if (!lead) {
+      return res.status(404).json({ ok: false, message: "Lead não encontrado" });
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("deleteLead error:", err);
+    return res.status(500).json({ ok: false, message: "Erro ao apagar lead" });
+  }
+}
 
 module.exports = {
   createLead,
   listLeads,
-  updateLeadStatus
+  updateLeadStatus,
+  deleteLead
 };
 
