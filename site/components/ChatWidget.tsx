@@ -194,6 +194,10 @@ export default function ChatWidget() {
       setLoading(false);
     }
   }
+  function replyDirect(answer: string) {
+  add("bot", answer);
+  add("bot", "Se quiser, posso abrir um ORÇAMENTO rapidinho. É só clicar em Orçamento 😉");
+  }
 
   function handleUser(textRaw: string) {
     const text = textRaw.trim();
@@ -338,54 +342,68 @@ export default function ChatWidget() {
               type="button"
               onClick={() => {
                 setLead((l) => ({ ...l, systemType: "On-grid" }));
-                handleUser("ORÇAMENTO");
-              }}
+                replyDirect(
+                  "🔌 **On-grid** é o sistema conectado à rede elétrica.\n" +
+                  "Você gera sua própria energia e o excedente vira crédito na conta de luz.\n" +
+                  "É o mais usado e o que tem melhor custo-benefício."
+               );
+             }}
               className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
             >
-              Orçamento
+              On-grid
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setLead((l) => ({ ...l, systemType: "On-grid" }));
-                handleUser("O que é on-grid?");
-            }}
-            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
-          >
-            On-grid
-          </button>
+                setLead((l) => ({ ...l, systemType: "Off-grid" }));
+                replyDirect(
+                  "🔋 **Off-grid** é o sistema com baterias.\n" +
+                  "Funciona sem depender da concessionária, ideal para locais sem rede ou quem quer autonomia total."
+                );
+              }}
+              className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+            >
+              Off-grid
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setLead((l) => ({ ...l, systemType: "Off-grid" }));
-              handleUser("O que é off-grid?");
-            }}
-            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
-          >
-            Off-grid
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLead((l) => ({ ...l, systemType: "Bombeamento" }));
+                replyDirect(
+                  "💧 **Bombeamento solar** usa energia do sol para acionar bombas d’água.\n" +
+                  "Muito usado em poços, irrigação e áreas rurais, reduzindo custo com energia."
+                );
+              }}
+              className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+            >
+              Bombeamento
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setLead((l) => ({ ...l, systemType: "Bombeamento" }));
-              handleUser("Como funciona bombeamento solar?");
-            }}
-             className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
-          >
-             Bombeamento
-          </button>
+             <button
+               type="button"
+               onClick={() => {
+                 setFlow("collect_name");
+                 add("bot", "Perfeito 😄 Vamos ao orçamento. Qual seu nome?");
+                }}
+                className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+              >
+                Orçamento
+              </button>
 
-          <button
-            type="button"
-            onClick={() => handleUser("Qual a garantia?")}
-            className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
-          >
-            Garantia
-          </button>
-        </div>
+               <button
+                 type="button"
+                 onClick={() =>
+                 replyDirect(
+                   "🛡️ Os equipamentos possuem garantia do fabricante e a instalação tem garantia do serviço.\nNo orçamento eu explico tudo certinho."
+                 )
+               }
+               className="text-xs px-3 py-1 rounded-full border bg-white hover:bg-gray-50"
+              >
+               Garantia
+              </button>
+            </div>
           <div className="h-80 overflow-y-auto p-3 space-y-3">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
