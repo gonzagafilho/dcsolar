@@ -717,10 +717,9 @@ const projetosFiltrados =
               </a>
               <div>E-mail: dc.net.infinity@gmail.com</div>
               <div>Endereço: Retor Residencial Nova Esperança Conjunto a Lote 02 Planaltina-DF</div>
-              <div>CNPJ: 63.899.571/0001-20</div>/div>
+              <div>CNPJ: 63.899.571/0001-20</div>
             </div>
           </div>
-
           <div className="mt-10 text-xs text-white/40">
             © {new Date().getFullYear()} DC SOLAR. Todos os direitos reservados.
           </div>
