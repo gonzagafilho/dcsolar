@@ -10,7 +10,7 @@ type ProjetoSelecionado = {
 };
 
 export default function Home() {
-  const whatsapp = "5561999656269";
+  const whatsapp = "5561996088711";
 
 const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
   "Olá! Quero um orçamento de energia solar. Pode me ajudar?"
@@ -194,7 +194,7 @@ const projetosFiltrados =
                 Solicitar orçamento
               </a>
               <a
-                href="https://wa.me/5561999656269"
+                href="https://wa.me/5561996088711"
                 target="_blank"
                 className="border border-white/40 px-6 py-3 rounded-xl"
               >
@@ -595,10 +595,10 @@ const projetosFiltrados =
                 <div className="text-sm text-white/70">Contato rápido</div>
                 <div className="mt-2 flex flex-col gap-2">
                   <a className="hover:underline" href={waLink} target="_blank" rel="noreferrer">
-                    WhatsApp: (61) 99965-6269
+                    WhatsApp: (61) 996088711
                   </a>
                   <a className="hover:underline" href="#contato">
-                    E-mail: contato@SEU-DOMINIO.com.br
+                    E-mail: dc.net.infinity@gmail.com
                   </a>
                 </div>
               </div>
@@ -606,13 +606,14 @@ const projetosFiltrados =
               <div className="mt-8 text-sm text-white/60">
                 <div className="font-medium text-white/80">Dados da empresa</div>
                 <div className="mt-2">
-                  Razão Social: <span className="text-white/80">[preencher]</span>
+                  Razão Social: <span className="text-white/80">DCNET INFINITY SERVICOS DE TELECOMUNICACOES LTDA
+</span>
                 </div>
                 <div>
-                  CNPJ: <span className="text-white/80">[preencher]</span>
+                  CNPJ: <span className="text-white/80">63.899.571/0001-20</span>
                 </div>
                 <div>
-                  Endereço: <span className="text-white/80">[preencher]</span>
+                  Endereço: <span className="text-white/80">Residencial Nova Esparença Planaltina-DF</span>
                 </div>
               </div>
             </div>
@@ -712,11 +713,11 @@ const projetosFiltrados =
             <div className="text-sm text-white/70 space-y-2">
               <div className="font-medium text-white/80">Contato</div>
               <a className="block hover:underline" href={waLink} target="_blank" rel="noreferrer">
-                WhatsApp: (61) 99965-6269
+                WhatsApp: (61) 996088711
               </a>
-              <div>E-mail: contato@SEU-DOMINIO.com.br</div>
-              <div>Endereço: [preencher]</div>
-              <div>CNPJ: [preencher]</div>
+              <div>E-mail: dc.net.infinity@gmail.com</div>
+              <div>Endereço: Retor Residencial Nova Esperança Conjunto a Lote 02 Planaltina-DF</div>
+              <div>CNPJ: 63.899.571/0001-20</div>/div>
             </div>
           </div>
 
